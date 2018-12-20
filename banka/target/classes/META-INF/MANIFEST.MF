@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Implementation-Title: banka
+Implementation-Version: 0.0.1-SNAPSHOT
+Built-By: Milos
+Implementation-Vendor-Id: project
+Build-Jdk: 1.8.0_192
+Implementation-URL: https://projects.spring.io/spring-boot/#/spring-bo
+ ot-starter-parent/banka
+Created-By: Maven Integration for Eclipse
+
