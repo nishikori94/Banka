@@ -48,7 +48,7 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 			uplata.setUplataId(uplata.id);
 			uplata.setId(null);
 			uplataRepository.save(uplata);
-			url = url + "/" + uplata.getUplataId(); // stavljam id koji baza izgenerise kad se snimi uplata
+			url = url + "/" + uplata.getUplataId() + "/" + casopis.getRacun().getBanka().getPort(); // stavljam id koji baza izgenerise kad se snimi uplata
 			return url;
 		} else {
 			return uplata.getErrorUrl();
