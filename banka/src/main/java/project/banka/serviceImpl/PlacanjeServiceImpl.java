@@ -86,11 +86,14 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 	}
 
 	@Override
-	public void proveriBanku(Transakcija transakcija) {
+	public String proveriBanku(Transakcija transakcija) {
 		Uplata uplata = uplataRepository.findById(transakcija.getUplataId()).get();
 		Banka banka = casopisRepository.findCasopisByMerchantId(uplata.getMerchantId()).getRacun().getBanka();
 		// TREBA NAMESTITI USLOV ZA BANKE. DA LI PRVE 3, 4 CIFRE ILI NESTO SLICNO; za
 		// sad sam stavio prve 4 cifre da oznacavaju banku
+		String formattedDate = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+		transakcija.setAcquirerTimestamp(formattedDate);
+		transakcija.setAcquirerOrderId(generateAcquirerOrderId());
 		if (transakcija.getPan().substring(0, 4).equals(banka.getPort())) { // ISTA BANKA
 			Racun racun = racunRep.findByBrojRacuna(transakcija.getPan());
 			RezultatTransakcije rz = new RezultatTransakcije(false, transakcija.getAcquirerOrderId(),
@@ -98,19 +101,18 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 			if (racun.getSigurnosniKod().equals(transakcija.getSigurnosniKod())) // mozda dodati proveru datuma i
 																					// cardholder name
 				if (Double.parseDouble(racun.getStanjeRacuna()) - Double.parseDouble(transakcija.getIznos()) > 0) {
-					// rz.setRezultat(true);
+					rz.setRezultat(true);
 					racun.setStanjeRacuna(Double.toString(
 							Double.parseDouble(racun.getStanjeRacuna()) - Double.parseDouble(transakcija.getIznos())));
 					racunRep.save(racun);
 				}
-			obradiIshodTransakcije(rz);
-		} else { // NIJE ISTA BANKA - generisi acq_timestamp i acq_order_id i prosledi pcc-u
-			String formattedDate = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-			transakcija.setAcquirerTimestamp(formattedDate);
-			transakcija.setAcquirerOrderId(generateAcquirerOrderId());
+			String url = obradiIshodTransakcije(rz);
+			return url;
+		} else { // NIJE ISTA BANKA - prosledi pcc-u
 			final String putanja = "http://localhost:9098/transakcija/proslediZahtev";
 			RestTemplate restTemplate = new RestTemplate();
 			restTemplate.postForObject(putanja, transakcija, Void.class);
+			return null;
 		}
 		// videti sta treba da vrati, verovatno rezultat transakcije sa linkovima i sl.
 
@@ -150,6 +152,7 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 						Double.parseDouble(racun.getStanjeRacuna()) - Double.parseDouble(transakcija.getIznos())));
 				racunRep.save(racun);
 			}
+			//obradiIshodTransakcije(rz);
 		}
 
 		return rz;
@@ -164,17 +167,18 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 	}
 
 	@Override
-	public void obradiIshodTransakcije(RezultatTransakcije rezultatTransakcije) {
+	public String obradiIshodTransakcije(RezultatTransakcije rezultatTransakcije) {
 		invalidirajLinkUplate(rezultatTransakcije);
 		if (rezultatTransakcije.isRezultat()) {
 			final String putanja = "http://localhost:9091/placanje/zavrsiUplatu/" + rezultatTransakcije.getUplataId();
 			RestTemplate restTemplate = new RestTemplate();
-			restTemplate.postForObject(putanja, rezultatTransakcije, Void.class);
-			return;
+			String url = restTemplate.postForObject(putanja, rezultatTransakcije, String.class);
+			return url;
 		}
 		final String putanja = "http://localhost:9091/placanje/otkaziUplatu/" + rezultatTransakcije.getUplataId();
 		RestTemplate restTemplate = new RestTemplate();
-		restTemplate.postForObject(putanja, rezultatTransakcije, Void.class);
+		String url = restTemplate.postForObject(putanja, rezultatTransakcije, String.class);
+		return url;
 	}
 
 }

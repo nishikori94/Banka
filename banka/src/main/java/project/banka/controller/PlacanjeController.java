@@ -46,12 +46,13 @@ public class PlacanjeController {
 
 	@PostMapping("/proveriPodatke")
 	@ResponseBody
-	public void unesiPodatke(@RequestBody Transakcija transakcija) {
+	public String unesiPodatke(@RequestBody Transakcija transakcija) {
 		// placanjeServiceImpl.setAcquirerSwiftCode(transakcija);
 		transakcija.setNazivVlasnikaKartice(transakcija.getNazivVlasnikaKartice().trim());
 		transakcija.setSigurnosniKod(transakcija.getSigurnosniKod().trim());
 		transakcija.setPan(transakcija.getPan().trim());
-		placanjeService.proveriBanku(transakcija);
+		String url = placanjeService.proveriBanku(transakcija);
+		return url;
 	}
 
 	// banka kupca prihvata transakciju od pcc-a(koji ga je nasao), proverava da li

@@ -8,7 +8,7 @@ public interface PlacanjeService {
 
 	public String generisiUrl(Uplata uplata);
 
-	public void proveriBanku(Transakcija transakcija);
+	public String proveriBanku(Transakcija transakcija);
 
 	public Uplata proveriUrl(String paymentUrl, Long paymentId);
 
@@ -16,6 +16,6 @@ public interface PlacanjeService {
 
 	public void invalidirajLinkUplate(RezultatTransakcije rezultatTransakcije);
 
-	public void obradiIshodTransakcije(RezultatTransakcije rezultatTransakcije);
+	public String obradiIshodTransakcije(RezultatTransakcije rezultatTransakcije);
 	
 }
