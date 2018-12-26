@@ -58,16 +58,16 @@ public class PlacanjeController {
 	// banka kupca prihvata transakciju od pcc-a(koji ga je nasao), proverava da li
 	// je u redu, rezervise sredstva i vraca rezultat transakcije pcc-u
 	@PostMapping("/proveriZahtev")
-	public void proveriZahtev(@RequestBody Transakcija transakcija) {
+	public String proveriZahtev(@RequestBody Transakcija transakcija) {
 		RezultatTransakcije rz = placanjeService.kupacProveriZahtev(transakcija);
 		final String putanja = "http://localhost:9098/transakcija/proslediOdgovor";
 		RestTemplate restTemplate = new RestTemplate();
-		restTemplate.postForObject(putanja, rz, Void.class);
+		return restTemplate.postForObject(putanja, rz, String.class);
 	}
 
 	@PostMapping("/obradiIshodTransakcije")
-	public void obradiIshodTransakcije(@RequestBody RezultatTransakcije rezultatTransakcije) {
-		placanjeService.obradiIshodTransakcije(rezultatTransakcije);
+	public String obradiIshodTransakcije(@RequestBody RezultatTransakcije rezultatTransakcije) {
+		return placanjeService.obradiIshodTransakcije(rezultatTransakcije);
 	}
 
 }

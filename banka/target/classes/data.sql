@@ -14,5 +14,5 @@ insert into Racun(broj_racuna, casopis_id, banka_id, stanje_racuna, datum_vazenj
 insert into Racun(broj_racuna, casopis_id, banka_id, stanje_racuna, datum_vazenja, sigurnosni_kod) values ('909222222222222222', 2, 1, '50000', '2020-12-20', '124');
 insert into Racun(broj_racuna, casopis_id, banka_id, stanje_racuna, datum_vazenja, sigurnosni_kod) values ('909211011111111111', 3, 1, '50000', '2020-12-20', '123');
 insert into Racun(broj_racuna, casopis_id, banka_id, stanje_racuna, datum_vazenja, sigurnosni_kod) values ('909222220222222222', 4, 1, '50000', '2020-12-20', '123');
-insert into Racun(broj_racuna, casopis_id, banka_id, stanje_racuna, datum_vazenja, sigurnosni_kod) values ('909210111111111111', 5, 1, '50000', '2020-12-20', '123');
+insert into Racun(broj_racuna, casopis_id, banka_id, stanje_racuna, datum_vazenja, sigurnosni_kod) values ('909310111111111111', 5, 1, '50000', '2020-12-20', '123');
 insert into Racun(broj_racuna, casopis_id, banka_id, stanje_racuna, datum_vazenja, sigurnosni_kod) values ('909222222222220222', 6, 1, '50000', '2020-12-20', '123');

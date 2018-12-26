@@ -40,19 +40,23 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 	private RezultatTransakcijeRepository rezultatTransakcijeRep;
 
 	public String generisiUrl(Uplata uplata) {
-		Casopis casopis = casopisRepository.findCasopisByMerchantId(uplata.getMerchantId());
-		if (casopis.getMerchantPassword().equals(uplata.getMerchantPassword())) {
-			String url = generatePaymentUrl(uplata.getMerchantOrderId());
-			uplata.setUplataLink(url);
-			uplata.setAktivanLink(true);
-			uplata.setUplataId(uplata.id);
-			uplata.setId(null);
-			uplataRepository.save(uplata);
-			url = url + "/" + uplata.getUplataId() + "/" + casopis.getRacun().getBanka().getPort(); // stavljam id koji baza izgenerise kad se snimi uplata
-			return url;
-		} else {
+		if (casopisRepository.findCasopisByMerchantId(uplata.getMerchantId()) != null) {
+			Casopis casopis = casopisRepository.findCasopisByMerchantId(uplata.getMerchantId());
+			if (casopis.getMerchantPassword().equals(uplata.getMerchantPassword())) {
+				String url = generatePaymentUrl(uplata.getMerchantOrderId());
+				uplata.setUplataLink(url);
+				uplata.setAktivanLink(true);
+				uplata.setUplataId(uplata.id);
+				uplata.setId(null);
+				uplataRepository.save(uplata);
+				// stavljam id koji baza izgenerise kad se snimi uplata
+				url = url + "/" + uplata.getUplataId() + "/" + casopis.getRacun().getBanka().getPort();
+				return url;
+			} else {
+				return uplata.getErrorUrl();
+			}
+		} else
 			return uplata.getErrorUrl();
-		}
 	}
 
 	private String generatePaymentUrl(Long id) {
@@ -96,8 +100,12 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 		transakcija.setAcquirerOrderId(generateAcquirerOrderId());
 		if (transakcija.getPan().substring(0, 4).equals(banka.getPort())) { // ISTA BANKA
 			Racun racun = racunRep.findByBrojRacuna(transakcija.getPan());
+			
 			RezultatTransakcije rz = new RezultatTransakcije(false, transakcija.getAcquirerOrderId(),
 					transakcija.getAcquirerTimestamp(), transakcija.getAcquirerSwiftCode(), transakcija.getUplataId());
+			if(racun == null) {
+				obradiIshodTransakcije(rz);
+			}
 			if (racun.getSigurnosniKod().equals(transakcija.getSigurnosniKod())) // mozda dodati proveru datuma i
 																					// cardholder name
 				if (Double.parseDouble(racun.getStanjeRacuna()) - Double.parseDouble(transakcija.getIznos()) > 0) {
@@ -111,8 +119,7 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 		} else { // NIJE ISTA BANKA - prosledi pcc-u
 			final String putanja = "http://localhost:9098/transakcija/proslediZahtev";
 			RestTemplate restTemplate = new RestTemplate();
-			restTemplate.postForObject(putanja, transakcija, Void.class);
-			return null;
+			return restTemplate.postForObject(putanja, transakcija, String.class);
 		}
 		// videti sta treba da vrati, verovatno rezultat transakcije sa linkovima i sl.
 
@@ -152,7 +159,7 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 						Double.parseDouble(racun.getStanjeRacuna()) - Double.parseDouble(transakcija.getIznos())));
 				racunRep.save(racun);
 			}
-			//obradiIshodTransakcije(rz);
+			// obradiIshodTransakcije(rz);
 		}
 
 		return rz;
