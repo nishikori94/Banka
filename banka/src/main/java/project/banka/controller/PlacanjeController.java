@@ -18,11 +18,14 @@ import project.banka.service.PlacanjeService;
 
 @RestController
 @RequestMapping("/placanje")
-@CrossOrigin(origins = "http://localhost:4202")
+@CrossOrigin(origins = "https://localhost:4202")
 public class PlacanjeController {
 
 	@Autowired
 	private PlacanjeService placanjeService;
+	
+	@Autowired
+	RestTemplate restTemplate;
 
 	// generisanje PAYMENT_URL i PAYMENT_ID i vracanje linka ka frontu banke
 	@PostMapping("/generisiUrl")
@@ -60,8 +63,7 @@ public class PlacanjeController {
 	@PostMapping("/proveriZahtev")
 	public String proveriZahtev(@RequestBody Transakcija transakcija) {
 		RezultatTransakcije rz = placanjeService.kupacProveriZahtev(transakcija);
-		final String putanja = "http://localhost:9098/transakcija/proslediOdgovor";
-		RestTemplate restTemplate = new RestTemplate();
+		final String putanja = "https://localhost:9098/transakcija/proslediOdgovor";
 		return restTemplate.postForObject(putanja, rz, String.class);
 	}
 

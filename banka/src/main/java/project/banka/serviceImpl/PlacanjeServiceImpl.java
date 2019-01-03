@@ -38,6 +38,9 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 
 	@Autowired
 	private RezultatTransakcijeRepository rezultatTransakcijeRep;
+	
+	@Autowired
+	RestTemplate restTemplate;
 
 	public String generisiUrl(Uplata uplata) {
 		if (casopisRepository.findCasopisByMerchantId(uplata.getMerchantId()) != null) {
@@ -74,7 +77,7 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 			builder.append(characters.charAt(index));
 		}
 
-		String ret = "http://localhost:4202/" + builder.toString();
+		String ret = "https://localhost:4202/" + builder.toString();
 
 		return ret;
 	}
@@ -117,8 +120,7 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 			String url = obradiIshodTransakcije(rz);
 			return url;
 		} else { // NIJE ISTA BANKA - prosledi pcc-u
-			final String putanja = "http://localhost:9098/transakcija/proslediZahtev";
-			RestTemplate restTemplate = new RestTemplate();
+			final String putanja = "https://localhost:9098/transakcija/proslediZahtev";
 			return restTemplate.postForObject(putanja, transakcija, String.class);
 		}
 		// videti sta treba da vrati, verovatno rezultat transakcije sa linkovima i sl.
@@ -177,13 +179,11 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 	public String obradiIshodTransakcije(RezultatTransakcije rezultatTransakcije) {
 		invalidirajLinkUplate(rezultatTransakcije);
 		if (rezultatTransakcije.isRezultat()) {
-			final String putanja = "http://localhost:9091/placanje/zavrsiUplatu/" + rezultatTransakcije.getUplataId();
-			RestTemplate restTemplate = new RestTemplate();
+			final String putanja = "https://localhost:9091/placanje/zavrsiUplatu/" + rezultatTransakcije.getUplataId();
 			String url = restTemplate.postForObject(putanja, rezultatTransakcije, String.class);
 			return url;
 		}
-		final String putanja = "http://localhost:9091/placanje/otkaziUplatu/" + rezultatTransakcije.getUplataId();
-		RestTemplate restTemplate = new RestTemplate();
+		final String putanja = "https://localhost:9091/placanje/otkaziUplatu/" + rezultatTransakcije.getUplataId();
 		String url = restTemplate.postForObject(putanja, rezultatTransakcije, String.class);
 		return url;
 	}
