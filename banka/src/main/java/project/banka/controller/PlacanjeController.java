@@ -71,5 +71,10 @@ public class PlacanjeController {
 	public String obradiIshodTransakcije(@RequestBody RezultatTransakcije rezultatTransakcije) {
 		return placanjeService.obradiIshodTransakcije(rezultatTransakcije);
 	}
+	
+	@GetMapping("/invalidirajLink")
+	public void invalidirajLink(@PathVariable("uplataId") Long uplataId) {
+		placanjeService.invalidirajLinkUplate(uplataId);
+	}
 
 }

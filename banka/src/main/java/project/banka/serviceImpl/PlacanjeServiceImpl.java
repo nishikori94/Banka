@@ -95,7 +95,8 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 	@Override
 	public String proveriBanku(Transakcija transakcija) {
 		Uplata uplata = uplataRepository.findById(transakcija.getUplataId()).get();
-		Banka banka = casopisRepository.findCasopisByMerchantId(uplata.getMerchantId()).getRacun().getBanka();
+		Racun merchantRacun = casopisRepository.findCasopisByMerchantId(uplata.getMerchantId()).getRacun();
+		Banka banka = merchantRacun.getBanka();
 		// TREBA NAMESTITI USLOV ZA BANKE. DA LI PRVE 3, 4 CIFRE ILI NESTO SLICNO; za
 		// sad sam stavio prve 4 cifre da oznacavaju banku
 		String formattedDate = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
@@ -103,7 +104,6 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 		transakcija.setAcquirerOrderId(generateAcquirerOrderId());
 		if (transakcija.getPan().substring(0, 4).equals(banka.getPort())) { // ISTA BANKA
 			Racun racun = racunRep.findByBrojRacuna(transakcija.getPan());
-			
 			RezultatTransakcije rz = new RezultatTransakcije(false, transakcija.getAcquirerOrderId(),
 					transakcija.getAcquirerTimestamp(), transakcija.getAcquirerSwiftCode(), transakcija.getUplataId());
 			if(racun == null) {
@@ -116,6 +116,7 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 					racun.setStanjeRacuna(Double.toString(
 							Double.parseDouble(racun.getStanjeRacuna()) - Double.parseDouble(transakcija.getIznos())));
 					racunRep.save(racun);
+					
 				}
 			String url = obradiIshodTransakcije(rz);
 			return url;
@@ -168,17 +169,22 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 	}
 
 	@Override
-	public void invalidirajLinkUplate(RezultatTransakcije rezultatTransakcije) {
-		Uplata uplata = uplataRepository.findUplataByUplataId(rezultatTransakcije.getUplataId());
+	public void invalidirajLinkUplate(Long uplataId) {
+		Uplata uplata = uplataRepository.findUplataByUplataId(uplataId);
 		uplata.setAktivanLink(false);
 		uplataRepository.save(uplata);
-		rezultatTransakcijeRep.save(rezultatTransakcije);
+		//rezultatTransakcijeRep.save(rezultatTransakcije);
 	}
 
 	@Override
 	public String obradiIshodTransakcije(RezultatTransakcije rezultatTransakcije) {
-		invalidirajLinkUplate(rezultatTransakcije);
+		invalidirajLinkUplate(rezultatTransakcije.getUplataId());
+		rezultatTransakcijeRep.save(rezultatTransakcije);
 		if (rezultatTransakcije.isRezultat()) {
+			Uplata uplata = uplataRepository.findById(rezultatTransakcije.getUplataId()).get();
+			Racun merchantRacun = casopisRepository.findCasopisByMerchantId(uplata.getMerchantId()).getRacun();
+			double novoStanjeRacuna = Double.parseDouble(merchantRacun.getStanjeRacuna()) + Double.parseDouble(uplata.getAmount());
+			merchantRacun.setStanjeRacuna(String.valueOf(novoStanjeRacuna));
 			final String putanja = "https://localhost:9091/placanje/zavrsiUplatu/" + rezultatTransakcije.getUplataId();
 			String url = restTemplate.postForObject(putanja, rezultatTransakcije, String.class);
 			return url;

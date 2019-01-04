@@ -14,7 +14,7 @@ public interface PlacanjeService {
 
 	public RezultatTransakcije kupacProveriZahtev(Transakcija transakcija);
 
-	public void invalidirajLinkUplate(RezultatTransakcije rezultatTransakcije);
+	public void invalidirajLinkUplate(Long uplataId);
 
 	public String obradiIshodTransakcije(RezultatTransakcije rezultatTransakcije);
 	
