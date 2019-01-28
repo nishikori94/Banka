@@ -36,7 +36,6 @@ public class RezultatTransakcije {
 
 	public RezultatTransakcije() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public RezultatTransakcije(String issuerOrderId, String issuerTimestamp, boolean rezultat, String acquirerOrderId,

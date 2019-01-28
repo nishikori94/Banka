@@ -44,7 +44,6 @@ public class Transakcija {
 
 	public Transakcija() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public Transakcija(String pan, String sigurnosniKod, String nazivVlasnikaKartice, Date datumVazenja, String iznos,

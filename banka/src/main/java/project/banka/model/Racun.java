@@ -20,6 +20,9 @@ public class Racun {
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	public Long id;
+	
+	@Column
+	public String vlasnikRacuna;
 
 	@Column(unique = true, nullable = false)
 	public String brojRacuna;
@@ -46,7 +49,7 @@ public class Racun {
 	}
 
 	public Racun(String brojRacuna, String sigurnosniKod, Date datumVazenja, String stanjeRacuna, Casopis casopis,
-			Banka banka) {
+			Banka banka, String vlasnikRacuna) {
 		super();
 		this.brojRacuna = brojRacuna;
 		this.sigurnosniKod = sigurnosniKod;
@@ -54,6 +57,7 @@ public class Racun {
 		this.stanjeRacuna = stanjeRacuna;
 		this.casopis = casopis;
 		this.banka = banka;
+		this.vlasnikRacuna = vlasnikRacuna;
 	}
 
 	public String getBrojRacuna() {
@@ -104,4 +108,12 @@ public class Racun {
 		this.banka = banka;
 	}
 
+	public String getVlasnikRacuna() {
+		return vlasnikRacuna;
+	}
+
+	public void setVlasnikRacuna(String vlasnikRacuna) {
+		this.vlasnikRacuna = vlasnikRacuna;
+	}
+	
 }

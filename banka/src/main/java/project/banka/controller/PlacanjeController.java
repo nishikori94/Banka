@@ -23,7 +23,7 @@ public class PlacanjeController {
 
 	@Autowired
 	private PlacanjeService placanjeService;
-	
+
 	@Autowired
 	RestTemplate restTemplate;
 
@@ -31,6 +31,7 @@ public class PlacanjeController {
 	@PostMapping("/generisiUrl")
 	@ResponseBody
 	public String genrisiUrl(@RequestBody Uplata uplata) {
+		System.out.println("[BANKA] Generisi url");
 		String ret = placanjeService.generisiUrl(uplata);
 		return ret;
 	}
@@ -44,13 +45,14 @@ public class PlacanjeController {
 	@GetMapping(path = "/proveriUrl/{paymentUrl}/{paymentId}") // , produces = MediaType.APPLICATION_JSON_VALUE
 	@ResponseBody
 	public Uplata proveriUrl(@PathVariable("paymentUrl") String paymentUrl, @PathVariable("paymentId") Long paymentId) {
+		System.out.println("[BANKA] Provera url-a");
 		return placanjeService.proveriUrl(paymentUrl, paymentId);
 	}
 
 	@PostMapping("/proveriPodatke")
 	@ResponseBody
 	public String unesiPodatke(@RequestBody Transakcija transakcija) {
-		// placanjeServiceImpl.setAcquirerSwiftCode(transakcija);
+		System.out.println("[BANKA] Unos podataka sa kartice");
 		transakcija.setNazivVlasnikaKartice(transakcija.getNazivVlasnikaKartice().trim());
 		transakcija.setSigurnosniKod(transakcija.getSigurnosniKod().trim());
 		transakcija.setPan(transakcija.getPan().trim());
@@ -62,6 +64,7 @@ public class PlacanjeController {
 	// je u redu, rezervise sredstva i vraca rezultat transakcije pcc-u
 	@PostMapping("/proveriZahtev")
 	public String proveriZahtev(@RequestBody Transakcija transakcija) {
+		System.out.println("[BANKA] Provera zahteva dobijenog od PCC-a i prosledjivanje nazad PCC-u");
 		RezultatTransakcije rz = placanjeService.kupacProveriZahtev(transakcija);
 		final String putanja = "https://localhost:9098/transakcija/proslediOdgovor";
 		return restTemplate.postForObject(putanja, rz, String.class);
@@ -69,11 +72,13 @@ public class PlacanjeController {
 
 	@PostMapping("/obradiIshodTransakcije")
 	public String obradiIshodTransakcije(@RequestBody RezultatTransakcije rezultatTransakcije) {
+		System.out.println("[BANKA] Obradjivanje ishoda transakcije");
 		return placanjeService.obradiIshodTransakcije(rezultatTransakcije);
 	}
-	
+
 	@GetMapping("/invalidirajLink")
 	public void invalidirajLink(@PathVariable("uplataId") Long uplataId) {
+		System.out.println("[BANKA] Invalidacija linka uplate");
 		placanjeService.invalidirajLinkUplate(uplataId);
 	}
 

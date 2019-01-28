@@ -1,6 +1,7 @@
 package project.banka.serviceImpl;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 
@@ -38,7 +39,7 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 
 	@Autowired
 	private RezultatTransakcijeRepository rezultatTransakcijeRep;
-	
+
 	@Autowired
 	RestTemplate restTemplate;
 
@@ -84,7 +85,6 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 
 	@Override
 	public Uplata proveriUrl(String paymentUrl, Long paymentId) {
-		// TODO Auto-generated method stub
 		Uplata uplata = uplataRepository.getUplataByUplataLinkContainingAndId(paymentUrl, paymentId);
 		if (uplata != null && uplata.isAktivanLink()) {
 			return uplata;
@@ -106,20 +106,30 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 			Racun racun = racunRep.findByBrojRacuna(transakcija.getPan());
 			RezultatTransakcije rz = new RezultatTransakcije(false, transakcija.getAcquirerOrderId(),
 					transakcija.getAcquirerTimestamp(), transakcija.getAcquirerSwiftCode(), transakcija.getUplataId());
-			if(racun == null) {
+			if (racun == null) {
 				obradiIshodTransakcije(rz);
 			}
-			if (racun.getSigurnosniKod().equals(transakcija.getSigurnosniKod())) // mozda dodati proveru datuma i
-																					// cardholder name
+			Calendar racunDatumVazenja = Calendar.getInstance();
+			racunDatumVazenja.setTime(racun.getDatumVazenja());
+			Calendar transakcijaDatumVazenja = Calendar.getInstance();
+			transakcijaDatumVazenja.setTime(transakcija.getDatumVazenja());
+
+			if (racun.getSigurnosniKod().equals(transakcija.getSigurnosniKod())
+					&& racun.getVlasnikRacuna().equals(transakcija.getNazivVlasnikaKartice())
+					&& racunDatumVazenja.get(Calendar.MONTH) == transakcijaDatumVazenja.get(Calendar.MONTH)
+					&& racunDatumVazenja.get(Calendar.YEAR) == transakcijaDatumVazenja.get(Calendar.YEAR)) {
 				if (Double.parseDouble(racun.getStanjeRacuna()) - Double.parseDouble(transakcija.getIznos()) > 0) {
 					rz.setRezultat(true);
 					racun.setStanjeRacuna(Double.toString(
 							Double.parseDouble(racun.getStanjeRacuna()) - Double.parseDouble(transakcija.getIznos())));
 					racunRep.save(racun);
-					
+				} else {
+					// TODO: sta ako nema para? vratiti neku poruku
 				}
-			String url = obradiIshodTransakcije(rz);
-			return url;
+			} else {
+				// TODO: ako nisu dobri neki od podataka? vratiti nek poruku
+			}
+			return obradiIshodTransakcije(rz);
 		} else { // NIJE ISTA BANKA - prosledi pcc-u
 			final String putanja = "https://localhost:9098/transakcija/proslediZahtev";
 			return restTemplate.postForObject(putanja, transakcija, String.class);
@@ -147,7 +157,6 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 
 	@Override
 	public RezultatTransakcije kupacProveriZahtev(Transakcija transakcija) {
-		// TODO Auto-generated method stub
 		Transakcija transakcijaZaId = transakcijaRep.save(transakcija);
 		Racun racun = racunRep.findByBrojRacuna(transakcija.getPan());
 		String issuerTimestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
@@ -173,7 +182,7 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 		Uplata uplata = uplataRepository.findUplataByUplataId(uplataId);
 		uplata.setAktivanLink(false);
 		uplataRepository.save(uplata);
-		//rezultatTransakcijeRep.save(rezultatTransakcije);
+		// rezultatTransakcijeRep.save(rezultatTransakcije);
 	}
 
 	@Override
@@ -183,14 +192,14 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 		if (rezultatTransakcije.isRezultat()) {
 			Uplata uplata = uplataRepository.findById(rezultatTransakcije.getUplataId()).get();
 			Racun merchantRacun = casopisRepository.findCasopisByMerchantId(uplata.getMerchantId()).getRacun();
-			double novoStanjeRacuna = Double.parseDouble(merchantRacun.getStanjeRacuna()) + Double.parseDouble(uplata.getAmount());
+			double novoStanjeRacuna = Double.parseDouble(merchantRacun.getStanjeRacuna())
+					+ Double.parseDouble(uplata.getAmount());
 			merchantRacun.setStanjeRacuna(String.valueOf(novoStanjeRacuna));
-			final String putanja = "https://localhost:9091/placanje/zavrsiUplatu/" + rezultatTransakcije.getUplataId();
-			String url = restTemplate.postForObject(putanja, rezultatTransakcije, String.class);
-			return url;
 		}
-		final String putanja = "https://localhost:9091/placanje/otkaziUplatu/" + rezultatTransakcije.getUplataId();
+		final String putanja = "https://localhost:9091/api/creditcard/complete?paymentId="
+				+ rezultatTransakcije.getUplataId() + "&result=" + rezultatTransakcije.isRezultat();
 		String url = restTemplate.postForObject(putanja, rezultatTransakcije, String.class);
+		// TODO: null ako je losa adresa
 		return url;
 	}
 

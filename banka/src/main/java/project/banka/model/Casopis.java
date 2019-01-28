@@ -30,7 +30,6 @@ public class Casopis {
 
 	public Casopis() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public Casopis(String naziv, String merchantId, String merchantPassword, project.banka.model.Racun racun) {
