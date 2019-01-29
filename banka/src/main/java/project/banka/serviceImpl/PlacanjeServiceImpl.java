@@ -85,7 +85,7 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 
 	@Override
 	public Uplata proveriUrl(String paymentUrl, Long paymentId) {
-		Uplata uplata = uplataRepository.getUplataByUplataLinkContainingAndId(paymentUrl, paymentId);
+		Uplata uplata = uplataRepository.getUplataByUplataLinkContainingAndUplataId(paymentUrl, paymentId);
 		if (uplata != null && uplata.isAktivanLink()) {
 			return uplata;
 		}
@@ -94,7 +94,7 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 
 	@Override
 	public String proveriBanku(Transakcija transakcija) {
-		Uplata uplata = uplataRepository.findById(transakcija.getUplataId()).get();
+		Uplata uplata = uplataRepository.findUplataByUplataId(transakcija.getUplataId());
 		Racun merchantRacun = casopisRepository.findCasopisByMerchantId(uplata.getMerchantId()).getRacun();
 		Banka banka = merchantRacun.getBanka();
 		// TREBA NAMESTITI USLOV ZA BANKE. DA LI PRVE 3, 4 CIFRE ILI NESTO SLICNO; za
@@ -190,7 +190,7 @@ public class PlacanjeServiceImpl implements PlacanjeService {
 		invalidirajLinkUplate(rezultatTransakcije.getUplataId());
 		rezultatTransakcijeRep.save(rezultatTransakcije);
 		if (rezultatTransakcije.isRezultat()) {
-			Uplata uplata = uplataRepository.findById(rezultatTransakcije.getUplataId()).get();
+			Uplata uplata = uplataRepository.findUplataByUplataId(rezultatTransakcije.getUplataId());
 			Racun merchantRacun = casopisRepository.findCasopisByMerchantId(uplata.getMerchantId()).getRacun();
 			double novoStanjeRacuna = Double.parseDouble(merchantRacun.getStanjeRacuna())
 					+ Double.parseDouble(uplata.getAmount());
